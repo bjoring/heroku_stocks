@@ -21,7 +21,7 @@ y_axis_label='y')
 
 p.line(x, y, legend_label='Trend', line_width=2)
 
-st.bokeh_chart(p, use_container_width=True)
+st.write(p)
 
 
 
