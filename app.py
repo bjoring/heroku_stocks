@@ -28,7 +28,6 @@ stock_df.index = pd.to_datetime(stock_df.index, format='%Y-%m-%d')
 
 
 # Plot with bokeh
-output_file('stock_ticker.html')
 p = figure(plot_height=400,
            plot_width=800,
            x_axis_label='Date',
