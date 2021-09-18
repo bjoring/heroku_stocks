@@ -20,7 +20,7 @@ def index():
 
     # Read in AlphaVantage API key
     load_dotenv()
-    API_KEY = os.getenv('PROJECT_API_KEY')
+    API_KEY = os.environ['API_KEY']
 
     def selectedTicker(value='AAPL'):
         ticker = value
