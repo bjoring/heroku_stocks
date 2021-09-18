@@ -2,7 +2,7 @@ import os
 import requests
 import re
 import pandas as pd
-from bokeh.models import ColumnDataSource, Select, Slider
+from bokeh.models import ColumnDataSource, Select
 from bokeh.resources import INLINE
 from bokeh.embed import components
 from bokeh.plotting import figure
@@ -36,9 +36,8 @@ def index():
         stock_df.index = pd.to_datetime(stock_df.index, format='%Y-%m-%d')
         return ticker, stock_df
 
-    source = ColumnDataSource()
-
     # callback = CustomJS(args=dict(source=source, controls=controls), code="""
+    #     ticker = controls.
     #     if (!window.full_data_save) {
     #         window.full_data_save = JSON.parse(JSON.stringify(source.data));
     #     }
@@ -62,13 +61,19 @@ def index():
     # """)
 
     ticker, stock_prices = selectedTicker()
+    chart_list = list(stock_prices.columns)
+    stock_prices['x'] = stock_prices.index
+    stock_prices['y'] = stock_prices['adjusted close']
+    source = ColumnDataSource(stock_prices)
+
+    chart = Select(title="Chart", value="adjusted close", options=chart_list)
 
     fig = figure(plot_height=400,
            plot_width=800,
            x_axis_label='Date',
            x_axis_type='datetime',
-           y_axis_label='Adjusted close',
-           title='{} adjusted closing prices'.format(ticker))
+           y_axis_label='Value',
+           title='{} stock data'.format(ticker))
     fig.line(x="x", y="y", source=source, line_color="black", line_width=2)
     fig.add_tools(HoverTool(tooltips=[
         ("Stock", ticker),
@@ -76,12 +81,22 @@ def index():
         ("Price", "$y"),
     ], formatters={'$x': 'datetime'}))
 
-    source.data = dict(
-        x=stock_prices.index,
-        y=stock_prices.close,
-    )
+    # source.data = dict(
+    #     x=stock_prices.index,
+    #     y=stock_prices.close,
+    # )
 
-    script, div = components(fig)
+    callback = CustomJS(args=dict(source=source, fig=fig), code="""
+        source.data['y'] = source.data[cb_obj.value];
+        source.change.emit();
+        """)
+
+    inputs_column = column(chart, width=320, height=1000)
+    layout_row = row([inputs_column, fig])
+
+    chart.js_on_change('value', callback)
+
+    script, div = components(layout_row)
     return render_template(
         'index.html',
         plot_script=script,
